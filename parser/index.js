@@ -61,6 +61,7 @@ getHtml(url)
       
     })()
     const verses = versesNode.map(n=>{return n.textContent.trim()})
+    const proseFlags = verses.map((v)=>{return v.split("\n").length>5})
 
     const synonyms = (()=>{
       var x = root.querySelector(".synonyms")

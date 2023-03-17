@@ -1,0 +1,9 @@
+.box {
+    border: 1px solid black;
+    height: 80vh;
+    width: 80vw;
+    padding: 2vw;
+    font-size: 3.5vw;
+    overflow: hidden;
+    text-align: center
+}
