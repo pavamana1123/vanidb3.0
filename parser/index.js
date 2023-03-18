@@ -1,5 +1,3 @@
-
-
 var HTMLParser = require('node-html-parser');
 
 const https = require('https');
@@ -13,6 +11,8 @@ cred.mysql.multipleStatements = true
 
 var mysql = require('mysql');
 var db = new DB(mysql.createPool(cred.mysql))
+
+var overwrite = true
 
 String.prototype.escape = function(){
   return this.replaceAll("\n","\\n").replaceAll('"','\\"')
@@ -67,7 +67,7 @@ function parseHtml(data) {
       if(parts.length==1){
         return parts
       }
-
+      group = true
       var texts = []
       for (var i = parseInt(parts[0].replaceAll(alpha,"")); i <= parseInt(parts[1].replaceAll(alpha,"")); i++) {
           texts.push(i+alpha)
@@ -85,7 +85,7 @@ function parseHtml(data) {
     
   })()
   const verses = isSummary?[""]:versesNode.map(n=>{return Buffer.from(n.textContent.trim()).toString('base64')})
-  const proseFlags = verses.map((v)=>{return v.split("\n").length<4})
+  const proseFlags = versesNode.map((n)=>{return n.textContent.trim().split("\n").length<4})
   group = verses.length>1
 
   const synonyms = (()=>{
@@ -140,7 +140,7 @@ function parseHtml(data) {
     return x[x.length-1].textContent.split(":")[1].trim()
   })()
 
-  const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName}
+  const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName, isSummary}
   if(!isSummary && (verses.length!=texts.length)){
     throw new Error("Mismatch len:", parsedContent.name)
   }
@@ -167,7 +167,8 @@ getHtml(url)
       \`nextLink\`,
       \`prevLink\`,
       \`isProse\`,
-      \`isGroup\`
+      \`isGroup\`,
+      \`isSummary\`
       )
       VALUES
       (
@@ -185,8 +186,30 @@ getHtml(url)
       "${parsedContent.nextLink}",
       "${parsedContent.prevLink}",
       ${!!parsedContent.proseFlags[i]},
-      ${!!parsedContent.group[i]}
-      );
+      ${!!parsedContent.group},
+      ${!!parsedContent.isSummary}
+      )
+      
+      ${overwrite?`
+      ON DUPLICATE KEY UPDATE
+      name="${parsedContent.name}",
+      book="${parsedContent.book}",
+      canto="${parsedContent.canto}",
+      chapter="${parsedContent.chapter}",
+      text="${parsedContent.texts[i]}",
+      verse="${v}",
+      synonyms="${parsedContent.synonyms}",
+      translation="${parsedContent.translation}",
+      purport="${parsedContent.purport}",
+      next="${parsedContent.next}",
+      prev="${parsedContent.prev}",
+      nextLink="${parsedContent.nextLink}",
+      prevLink="${parsedContent.prevLink}",
+      isProse=${!!parsedContent.proseFlags[i]},
+      isGroup=${!!parsedContent.group},
+      isSummary=${!!parsedContent.isSummary}
+      `:""}
+      ;
       `
       db.execQuery(query).then((err, res)=>{
         console.log(err, res)
