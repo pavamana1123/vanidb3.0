@@ -3,7 +3,7 @@
 var HTMLParser = require('node-html-parser');
 
 const https = require('https');
-const url = 'https://vanisource.org/wiki/SB_5.18.8';
+const url = 'https://vanisource.org/wiki/SB_9.19_Summary';
 
 var cred = require("./cred.js")
 const DB = require("./db.js")
@@ -13,6 +13,10 @@ cred.mysql.multipleStatements = true
 
 var mysql = require('mysql');
 var db = new DB(mysql.createPool(cred.mysql))
+
+String.prototype.escape = function(){
+  return this.replaceAll("\n","\\n").replaceAll('"','\\"')
+}
 
 function getHtml(url) {
     return new Promise(function(resolve, reject) {
@@ -41,10 +45,12 @@ function parseHtml(data) {
   var texts = []
   var text = ""
   var group = false
+  var isSummary = false
   if(name.includes("Summary")){
     canto = parts[0]
     chapter = parts[1].split(" ")[0]
-    texts = ["0"]
+    texts = ["Summary"]
+    isSummary = true
   }else{
     if(parts.length==3){
       canto = parts[0]
@@ -56,7 +62,7 @@ function parseHtml(data) {
     }
     texts = (()=>{
       const hasAlpha = /[a-zA-Z]/.test(text)
-      const alpha = text.match(/[a-zA-Z]+/g)[0]
+      const alpha = hasAlpha?text.match(/[a-zA-Z]+/g)[0]:""
       const parts = text.split("-")
       if(parts.length==1){
         return parts
@@ -64,7 +70,7 @@ function parseHtml(data) {
 
       var texts = []
       for (var i = parseInt(parts[0].replaceAll(alpha,"")); i <= parseInt(parts[1].replaceAll(alpha,"")); i++) {
-          texts.push(i+hasAlpha?alpha:"")
+          texts.push(i+alpha)
       }
       return texts
     })()
@@ -78,22 +84,42 @@ function parseHtml(data) {
     return []
     
   })()
-  const verses = versesNode.map(n=>{return n.textContent.trim()})
+  const verses = isSummary?[""]:versesNode.map(n=>{return Buffer.from(n.textContent.trim()).toString('base64')})
   const proseFlags = verses.map((v)=>{return v.split("\n").length<4})
   group = verses.length>1
 
   const synonyms = (()=>{
     var x = root.querySelector(".synonyms")
     if(!!x){
-      return x.textContent.trim()
+      return Buffer.from(x.textContent.trim()).toString('base64')
     }
-    return null
+    return isSummary?"":null
+  })()
+
+  const translation = (()=>{
+    var x = root.querySelector(".translation")
+    if(!!x){
+      return Buffer.from(x.textContent.trim()).toString('base64')
+    }
+    return isSummary?"":null
   })()
 
   const purport = (()=>{
-    var x = root.querySelector(".purport")
-    if(!!x){
-      return x.textContent.trim()
+    var purport = []
+    var paragraphs = root.querySelector(".purport")
+    if(!!paragraphs){
+      for(var i=0; i<paragraphs.childNodes.length; i++){
+        if(!paragraphs.childNodes[i].textContent.trim()){
+          continue
+        }
+        purport.push({
+          text: paragraphs.childNodes[i].textContent.trim()
+        })
+        if(paragraphs.childNodes[i].rawTagName=="dl"){
+          purport[purport.length-1].isRef=true
+        }
+      }
+      return Buffer.from(JSON.stringify(purport)).toString('base64')
     }
     return null
   })()
@@ -111,48 +137,57 @@ function parseHtml(data) {
 
   const chapterName = (()=>{
     var x = root.querySelector(".mw-parser-output").getElementsByTagName("b")[0].getElementsByTagName("a")
-    return x[2].textContent.split(":")[1].trim()
+    return x[x.length-1].textContent.split(":")[1].trim()
   })()
 
-  return {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, purport, next, prev, nextLink, prevLink, chapterName}
+  const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName}
+  if(!isSummary && (verses.length!=texts.length)){
+    throw new Error("Mismatch len:", parsedContent.name)
+  }
+  return parsedContent
 }
 
 getHtml(url)
   .then((data)=>{
-    var content = parseHtml(data)
-    content.verses.map((v, i)=>{
-      
-      var query = `INSERT INTO texts
-      (name,
-      book,
-      canto,
-      chapter,
-      text,
-      verse,
-      synonyms,
-      translation,
-      purport,
-      next,
-      prev,
-      nextLink,
-      prevLink)
+    var parsedContent = parseHtml(data)
+    parsedContent.verses.map((v, i)=>{
+      var query = `INSERT ignore INTO texts
+      (
+      \`name\`,
+      \`book\`,
+      \`canto\`,
+      \`chapter\`,
+      \`text\`,
+      \`verse\`,
+      \`synonyms\`,
+      \`translation\`,
+      \`purport\`,
+      \`next\`,
+      \`prev\`,
+      \`nextLink\`,
+      \`prevLink\`,
+      \`isProse\`,
+      \`isGroup\`
+      )
       VALUES
-      ("${verse.name.replaceAll('"','\\"')}",
-      "${verse.book.replaceAll('"','\\"')}",
-      "${verse.canto.replaceAll('"','\\"')}",
-      "${verse.chapter.replaceAll('"','\\"')}",
-      "${verse.text.replaceAll('"','\\"')}",
-      "${verse.verse.replaceAll('"','\\"')}",
-      "${verse.synonyms.replaceAll('"','\\"')}",
-      "${verse.translation.replaceAll('"','\\"')}",
-      "${verse.purport.replaceAll('"','\\"')}",
-      "${verse.next.replaceAll('"','\\"')}",
-      "${verse.prev.replaceAll('"','\\"')}",
-      "${verse.nextLink.replaceAll('"','\\"')}",
-      "${verse.prevLink.replaceAll('"','\\"')}"
-      ;
+      (
+      "${parsedContent.name}",
+      "${parsedContent.book}",
+      "${parsedContent.canto}",
+      "${parsedContent.chapter}",
+      "${parsedContent.texts[i]}",
+      "${v}",
+      "${parsedContent.synonyms}",
+      "${parsedContent.translation}",
+      "${parsedContent.purport}",
+      "${parsedContent.next}",
+      "${parsedContent.prev}",
+      "${parsedContent.nextLink}",
+      "${parsedContent.prevLink}",
+      ${!!parsedContent.proseFlags[i]},
+      ${!!parsedContent.group[i]}
+      );
       `
-      console.log(query)
       db.execQuery(query).then((err, res)=>{
         console.log(err, res)
       }).catch((err)=>{
