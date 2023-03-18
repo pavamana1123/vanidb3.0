@@ -38,11 +38,13 @@ function parseHtml(data) {
   const parts = name.split(" ")[1].split(".")
   var canto = null
   var chapter = null
-  var text = null
+  var texts = []
+  var text = ""
+  var group = false
   if(name.includes("Summary")){
     canto = parts[0]
     chapter = parts[1].split(" ")[0]
-    text = "0"
+    texts = ["0"]
   }else{
     if(parts.length==3){
       canto = parts[0]
@@ -52,15 +54,21 @@ function parseHtml(data) {
       chapter = parts[0]
       text = parts[1]
     }
-  }
+    texts = (()=>{
+      const hasAlpha = /[a-zA-Z]/.test(text)
+      const alpha = text.match(/[a-zA-Z]+/g)[0]
+      const parts = text.split("-")
+      if(parts.length==1){
+        return parts
+      }
 
-  const verseCount = (()=>{
-    const x = text.split("-")
-    if(x.length==1){
-      return 1
-    }
-    return parseInt(x[1].replace(/\D/g,''))-parseInt(x[0].replace(/\D/g,''))+1
-  })()
+      var texts = []
+      for (var i = parseInt(parts[0].replaceAll(alpha,"")); i <= parseInt(parts[1].replaceAll(alpha,"")); i++) {
+          texts.push(i+hasAlpha?alpha:"")
+      }
+      return texts
+    })()
+  }
 
   var versesNode = (()=>{
     var x = root.querySelector(".verse")
@@ -71,7 +79,8 @@ function parseHtml(data) {
     
   })()
   const verses = versesNode.map(n=>{return n.textContent.trim()})
-  const proseFlags = verses.map((v)=>{return v.split("\n").length>5})
+  const proseFlags = verses.map((v)=>{return v.split("\n").length<4})
+  group = verses.length>1
 
   const synonyms = (()=>{
     var x = root.querySelector(".synonyms")
@@ -105,7 +114,7 @@ function parseHtml(data) {
     return x[2].textContent.split(":")[1].trim()
   })()
 
-  return {name, book, canto, chapter, text, verses, proseFlags, synonyms, purport, next, prev, nextLink, prevLink, chapterName}
+  return {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, purport, next, prev, nextLink, prevLink, chapterName}
 }
 
 getHtml(url)
