@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "mysql": "^2.18.1",
     "node-html-parser": "^6.1.4"
   }
 }
