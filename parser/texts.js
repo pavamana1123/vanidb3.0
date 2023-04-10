@@ -1,4 +1,5 @@
 var HTMLParser = require('node-html-parser');
+const fs = require('fs');
 
 const https = require('https');
 
@@ -18,13 +19,19 @@ const books = {
   }
 }
 
-var book = "sb"
-var url = books[book].startLink
-var overwrite = true
+var bookName = "sb"
+var saveData = fs.readFileSync('save.json', 'utf8').trim()
+var url, purl = null
 
-String.prototype.escape = function(){
-  return this.replaceAll("\n","\\n").replaceAll('"','\\"')
+try{
+  var saveParseData = JSON.parse(saveData)
+  url = saveParseData.url
+  purl = saveParseData.purl
+}catch{
+  url = books[bookName].startLink
 }
+
+var overwrite = true
 
 function getHtml(url) {
     return new Promise(function(resolve, reject) {
@@ -145,13 +152,24 @@ function parseHtml(data) {
     var nextLink = links[0].getAttribute("href")
     var prevLink = links[1].getAttribute("href")
 
-    if(url==books[book].startLink){
+    if(url==books[bookName].startLink){
+      prev=next
       next=null
+      prevLink=nextLink
       nextLink=null
     }
-    if(url==books[book].endLink){
+    if(url==books[bookName].endLink){
       prev=null
       prevLink=null
+    }
+    if(url=='https://vanisource.org/wiki/SB_11.17.50'){
+      prev='SB 11.17.49'
+      prevLink='/wiki/SB_11.17.49'
+      next='SB 11.17.51'
+      nextLink='/wiki/SB_11.17.51'
+    }
+    if(purl!==null && `https://vanisource.org${nextLink}`!==purl){
+      reject(`link disconnected at ${url} ${nextLink} ${purl}`)
     }
 
     const chapterName = (()=>{
@@ -161,27 +179,18 @@ function parseHtml(data) {
 
     const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName, isSummary}
     if(!isSummary && (verses.length!=texts.length)){
-      throw new Error("Mismatch len:", parsedContent.name)
+      reject(`Mismatch len: ${parsedContent.name}`)
     }
+    parsedData = parsedContent
     resolve(parsedContent)
   });
 }
 
-function log(l){
-  console.log(`  ${parsedContent.name}> ${l}`)
-}
-
-var parsedContent
-var start = true
-
-function storeVerse(){
-  getHtml(url)
-  .then(parseHtml)
-  .then((parsedContent)=>{
-    parsedContent = parseHtml(data)
-    log("parsed html")
-    parsedContent.verses.map((v, i)=>{
-      var query = `INSERT ignore INTO texts
+function prepareQuery(parsedContent){
+  log("parsed html, preparing query")
+  return new Promise(function(resolve, reject) {
+    resolve(parsedContent.verses.map((v, i)=>{
+      return `INSERT ignore INTO texts
       (
       \`name\`,
       \`book\`,
@@ -244,30 +253,60 @@ function storeVerse(){
       `:""}
       ;
       `
-      log("writing data")
-      db.execQuery(query).then((res, err)=>{
-        if(err){
-          console.log(err)
-          log(`database error ${err}`)
-        }else{
-          url = `https://vanisource.org${start?parsedContent.nextLink:parsedContent.prevLink}`
-          start=false
-          log("written to database")
-          storeVerse()
-        }
-      }).catch((err)=>{
-        console.log(err)
-      })
-    })
+    }).join(""))
   })
-  .then
-  .catch(function(err) {
-    console.log(url, parsedContent.prevLink, parsedContent.nextLink)
-    log(err)
-  });
 }
 
-storeVerse()
+function updateNextUrl(res, err){
+  log("save to db")
+  return new Promise(function(resolve, reject) {
+    if(err){
+      reject(err)
+    }else{
+      try {
+        fs.writeFileSync('save.json', JSON.stringify({url, purl}));
+      } catch (err) {
+        reject(err)
+      }
+      purl = url
+      url = `https://vanisource.org${parsedData.prevLink}`
+      resolve()
+    }
+  })
+}
+
+function saveToDatabase(query){
+  return db.execQuery(query)
+}
+
+function log(l){
+  console.log(`  ${parsedData.name}> ${l}`)
+}
+
+var parsedData
+
+function parseIt() {
+  getHtml(url)
+  .then(parseHtml)
+  .then(prepareQuery)
+  .then(saveToDatabase)
+  .then(updateNextUrl)
+  .then(()=>{
+    console.log(new Date(), `processing next url: ${url}`)
+    if(purl!=books[bookName].endLink){
+      parseIt()
+    }
+  })
+  .catch(function(err) {
+    console.log(err)
+    log(err)
+  });  
+}
+
+parseIt()
+
+
+
 
 
 
