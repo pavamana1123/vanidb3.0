@@ -1,7 +1,7 @@
 var HTMLParser = require('node-html-parser');
 
 const https = require('https');
-const url = 'https://vanisource.org/wiki/SB_9.19_Summary';
+var url = 'https://vanisource.org/wiki/SB_12.13.23';
 
 var cred = require("./cred.js")
 const DB = require("./db.js")
@@ -147,9 +147,19 @@ function parseHtml(data) {
   return parsedContent
 }
 
-getHtml(url)
+function log(l){
+  console.log(`${parsedContent.name}> ${l}`)
+}
+
+var parsedContent
+
+console.log("starting parser")
+  console.log("waiting to get html")
+  getHtml(url)
   .then((data)=>{
-    var parsedContent = parseHtml(data)
+    console.log("waiting to parse html")
+    parsedContent = parseHtml(data)
+    log("parsed html")
     parsedContent.verses.map((v, i)=>{
       var query = `INSERT ignore INTO texts
       (
@@ -211,17 +221,22 @@ getHtml(url)
       `:""}
       ;
       `
+      log("writing data")
       db.execQuery(query).then((err, res)=>{
-        console.log(err, res)
+        if(err){
+          log(err)
+        }
+        url = parsedContent.prevLink
+        log("written to data base")
       }).catch((err)=>{
         console.log(err)
       })
     })
-
-
   })
   .catch(function(err) {
-    console.log(err)
+    log(err)
   });
-    
+  console.log("step complete")
+
+
 
