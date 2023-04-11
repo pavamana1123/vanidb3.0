@@ -148,11 +148,13 @@ function parseHtml(data) {
       return [x[x.length-1], x[x.length-3]]
     })()
 
+
     var next = links[0].getAttribute("title")
     var prev = links[1].getAttribute("title")
 
     var nextLink = links[0].getAttribute("href")
     var prevLink = links[1].getAttribute("href")
+
 
     switch(url){
       case startLink:
@@ -173,10 +175,13 @@ function parseHtml(data) {
         break;
     }
 
+
     if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){
-      next=purl.split("/")[purl.split("/").length-1].replaceAll("_",".")
+      next=purl.split("/")[purl.split("/").length-1].replaceAll("_Summary",".Summary")
       nextLink=purl.replace("https://vanisource.org","")
     }
+
+
 
     if(purl && nextLink && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       faultMap[purl]=nextLink
@@ -187,7 +192,7 @@ function parseHtml(data) {
       var thisVerse = thisText[thisText.length-1]
 
       var nextText = getTexts(next)
-      var nextVerse = nextText[nextText.length-1]
+      var nextVerse = nextText[0]
 
       if(nextVerse!="Summary"){
         if(!isNaN(thisVerse) && !isNaN(nextVerse)){

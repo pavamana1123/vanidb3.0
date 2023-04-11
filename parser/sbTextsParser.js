@@ -178,12 +178,12 @@ function parseHtml(data) {
         prevLink='/wiki/SB_12.2.27-28'
     }
 
-    if(purl.endsWith("Summary") && nextLink.endsWith(".1")){
-      next=purl.split("/")[purl.split("/").length-1].replaceAll("_",".")
+    if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){
+      next=purl.split("/")[purl.split("/").length-1].replaceAll("_Summary",".Summary")
       nextLink=purl.replace("https://vanisource.org","")
     }
 
-    if(purl!==null && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
+    if(purl && nextLink && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       reject(`link disconnected at ${url} ${nextLink} ${purl}`)
     }
 
