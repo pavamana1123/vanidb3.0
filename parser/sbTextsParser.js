@@ -58,7 +58,8 @@ function parseHtml(data) {
     var text = ""
     var group = false
     var isSummary = false
-    if(name.includes("Summary")){
+    if(name.endsWith("Summary")){
+      name = name.replace(" Summary",".Summary")
       canto = parts[0]
       chapter = parts[1].split(" ")[0]
       texts = ["Summary"]
@@ -147,34 +148,41 @@ function parseHtml(data) {
     var nextLink = links[0].getAttribute("href")
     var prevLink = links[1].getAttribute("href")
 
-    if(url==startLink){
-      prev=next
-      next=null
-      prevLink=nextLink
-      nextLink=null
+    switch(url){
+      case startLink:
+        prev=next
+        next=null
+        prevLink=nextLink
+        nextLink=null
+        break;
+      case endLink:
+        prev=null
+        prevLink=null
+        break;
+      case 'https://vanisource.org/wiki/SB_11.17.50':
+        prev='SB 11.17.49'
+        prevLink='/wiki/SB_11.17.49'
+        next='SB 11.17.51'
+        nextLink='/wiki/SB_11.17.51'
+        break;
+      case 'https://vanisource.org/wiki/SB_12.9.19':
+        prev='SB 12.9.17-18'
+        prevLink='/wiki/SB_12.9.17-18'
+        break;
+      case 'https://vanisource.org/wiki/SB_12.3.41':
+        prev='SB 12.3.39-40'
+        prevLink='/wiki/SB_12.3.39-40'
+        break;
+      case 'https://vanisource.org/wiki/SB_12.2.29':
+        prev='SB 12.2.27-28'
+        prevLink='/wiki/SB_12.2.27-28'
     }
-    if(url==endLink){
-      prev=null
-      prevLink=null
+
+    if(purl.endsWith("Summary") && nextLink.endsWith(".1")){
+      next=purl.split("/")[purl.split("/").length-1].replaceAll("_",".")
+      nextLink=purl.replace("https://vanisource.org","")
     }
-    if(url=='https://vanisource.org/wiki/SB_11.17.50'){
-      prev='SB 11.17.49'
-      prevLink='/wiki/SB_11.17.49'
-      next='SB 11.17.51'
-      nextLink='/wiki/SB_11.17.51'
-    }
-    if(url=='https://vanisource.org/wiki/SB_12.9.19'){
-      prev='SB 12.9.17-18'
-      prevLink='/wiki/SB_12.9.17-18'
-    }
-    if(url=='https://vanisource.org/wiki/SB_12.3.41'){
-      prev='SB 12.3.39-40'
-      prevLink='/wiki/SB_12.3.39-40'
-    }
-    if(url=='https://vanisource.org/wiki/SB_12.2.29'){
-      prev='SB 12.2.27-28'
-      prevLink='/wiki/SB_12.2.27-28'
-    }
+
     if(purl!==null && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       reject(`link disconnected at ${url} ${nextLink} ${purl}`)
     }
