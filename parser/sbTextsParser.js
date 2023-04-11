@@ -279,7 +279,7 @@ function updateNextUrl(res, err){
       reject(err)
     }else{
       try {
-        fs.writeFileSync('sbSave.json', JSON.stringify({url, purl}));
+        fs.writeFileSync('sbSave.json', JSON.stringify({url, purl}, null, 2));
       } catch (err) {
         reject(err)
       }

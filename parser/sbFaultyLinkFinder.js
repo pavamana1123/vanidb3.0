@@ -26,6 +26,14 @@ try{
   url = startLink
 }
 
+function getTexts(t){
+  var p = t.split(".")
+  if(p.length!=3){
+    throw new Error(`wrong parts ${p.length}, ${t}`)
+  }
+  return p[p.length-1].split("-")
+}
+
 function getHtml(url) {
     return new Promise(function(resolve, reject) {
         https.get(url, (res) => {
@@ -174,6 +182,28 @@ function parseHtml(data) {
       faultMap[purl]=nextLink
     }
 
+    if(next){
+      var thisText = getTexts(name)
+      var thisVerse = thisText[thisText.length-1]
+
+      var nextText = getTexts(next)
+      var nextVerse = nextText[nextText.length-1]
+
+      if(nextVerse!="Summary"){
+        if(!isNaN(thisVerse) && !isNaN(nextVerse)){
+            if(parseInt(thisVerse)!=parseInt(nextVerse)-1){
+              faultMap[name]=next
+            }
+        }else if(thisVerse=="Summary"){
+          if(nextVerse!="1"){
+            faultMap[name]=next
+          }
+        }else{
+          faultMap[name]=next
+        }
+      }
+    }
+
     const chapterName = (()=>{
       var x = root.querySelector(".mw-parser-output").getElementsByTagName("b")[0].getElementsByTagName("a")
       return x[x.length-1].textContent.split(":")[1].trim()
@@ -195,8 +225,8 @@ function updateNextUrl(res, err){
       reject(err)
     }else{
       try {
-        fs.writeFileSync('sbFaultyLinksSave.json', JSON.stringify({url, purl}));
-        fs.writeFileSync('sbFaultyLinks.json', JSON.stringify(faultMap));
+        fs.writeFileSync('sbFaultyLinksSave.json', JSON.stringify({url, purl}, null, 2));
+        fs.writeFileSync('sbFaultyLinks.json', JSON.stringify(faultMap, null, 2));
       } catch (err) {
         reject(err)
       }
