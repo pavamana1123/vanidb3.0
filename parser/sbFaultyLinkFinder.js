@@ -207,6 +207,7 @@ function updateNextUrl(res, err){
     }else{
       try {
         fs.writeFileSync('sbFaultyLinksSave.json', JSON.stringify({url, purl}));
+        fs.writeFileSync('sbFaultyLinks.json', JSON.stringify(faultMap));
       } catch (err) {
         reject(err)
       }
