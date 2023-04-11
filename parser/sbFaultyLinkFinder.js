@@ -47,7 +47,7 @@ function parseHtml(data) {
   return new Promise(function(resolve, reject) {
     const root = HTMLParser.parse(data)
 
-    const name = root.querySelector("#firstHeading").textContent.trim()
+    var name = root.querySelector("#firstHeading").textContent.trim()
     const book = name.split(" ")[0]
     const parts = name.split(" ")[1].split(".")
     var canto = null
