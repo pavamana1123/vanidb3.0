@@ -9,7 +9,7 @@ const endLink =  "https://vanisource.org/wiki/SB_1.1.1"
 var saveData = fs.readFileSync('sbFaultyLinksSave.json', 'utf8').trim()
 var url, purl = null
 
-var faultData = fs.readFileSync('sbFaultyLinksSave.json', 'utf8').trim()
+var faultData = fs.readFileSync('sbFaultyLinks.json', 'utf8').trim()
 var faultMap = {}
 
 try{
@@ -163,25 +163,14 @@ function parseHtml(data) {
         next='SB 11.17.51'
         nextLink='/wiki/SB_11.17.51'
         break;
-      case 'https://vanisource.org/wiki/SB_12.9.19':
-        prev='SB 12.9.17-18'
-        prevLink='/wiki/SB_12.9.17-18'
-        break;
-      case 'https://vanisource.org/wiki/SB_12.3.41':
-        prev='SB 12.3.39-40'
-        prevLink='/wiki/SB_12.3.39-40'
-        break;
-      case 'https://vanisource.org/wiki/SB_12.2.29':
-        prev='SB 12.2.27-28'
-        prevLink='/wiki/SB_12.2.27-28'
     }
 
-    if(purl && purl.endsWith("Summary") && nextLink.endsWith(".1")){
+    if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){
       next=purl.split("/")[purl.split("/").length-1].replaceAll("_",".")
       nextLink=purl.replace("https://vanisource.org","")
     }
 
-    if(purl!==null && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
+    if(purl && nextLink && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       faultMap[purl]=nextLink
     }
 
