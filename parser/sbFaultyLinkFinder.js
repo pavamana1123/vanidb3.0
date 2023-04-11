@@ -176,7 +176,7 @@ function parseHtml(data) {
         prevLink='/wiki/SB_12.2.27-28'
     }
 
-    if(purl.endsWith("Summary") && nextLink.endsWith(".1")){
+    if(purl && purl.endsWith("Summary") && nextLink.endsWith(".1")){
       next=purl.split("/")[purl.split("/").length-1].replaceAll("_",".")
       nextLink=purl.replace("https://vanisource.org","")
     }
@@ -200,7 +200,7 @@ function parseHtml(data) {
 }
 
 function updateNextUrl(res, err){
-  log("save to db")
+  log("url ok")
   return new Promise(function(resolve, reject) {
     if(err){
       reject(err)
