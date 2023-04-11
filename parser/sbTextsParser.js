@@ -12,15 +12,10 @@ cred.mysql.multipleStatements = true
 var mysql = require('mysql');
 var db = new DB(mysql.createPool(cred.mysql))
 
-const books = {
-  sb: {
-    startLink: "https://vanisource.org/wiki/SB_12.13.23",
-    endLink: "https://vanisource.org/wiki/SB_1.1.1"
-  }
-}
+const startLink = "https://vanisource.org/wiki/SB_12.13.23"
+const endLink =  "https://vanisource.org/wiki/SB_1.1.1"
 
-var bookName = "sb"
-var saveData = fs.readFileSync('save.json', 'utf8').trim()
+var saveData = fs.readFileSync('sbSave.json', 'utf8').trim()
 var url, purl = null
 
 try{
@@ -28,7 +23,7 @@ try{
   url = saveParseData.url
   purl = saveParseData.purl
 }catch{
-  url = books[bookName].startLink
+  url = startLink
 }
 
 var overwrite = true
@@ -152,13 +147,13 @@ function parseHtml(data) {
     var nextLink = links[0].getAttribute("href")
     var prevLink = links[1].getAttribute("href")
 
-    if(url==books[bookName].startLink){
+    if(url==startLink){
       prev=next
       next=null
       prevLink=nextLink
       nextLink=null
     }
-    if(url==books[bookName].endLink){
+    if(url==endLink){
       prev=null
       prevLink=null
     }
@@ -168,7 +163,19 @@ function parseHtml(data) {
       next='SB 11.17.51'
       nextLink='/wiki/SB_11.17.51'
     }
-    if(purl!==null && `https://vanisource.org${nextLink}`!==purl){
+    if(url=='https://vanisource.org/wiki/SB_12.9.19'){
+      prev='SB 12.9.17-18'
+      prevLink='/wiki/SB_12.9.17-18'
+    }
+    if(url=='https://vanisource.org/wiki/SB_12.3.41'){
+      prev='SB 12.3.39-40'
+      prevLink='/wiki/SB_12.3.39-40'
+    }
+    if(url=='https://vanisource.org/wiki/SB_12.2.29'){
+      prev='SB 12.2.27-28'
+      prevLink='/wiki/SB_12.2.27-28'
+    }
+    if(purl!==null && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       reject(`link disconnected at ${url} ${nextLink} ${purl}`)
     }
 
@@ -264,7 +271,7 @@ function updateNextUrl(res, err){
       reject(err)
     }else{
       try {
-        fs.writeFileSync('save.json', JSON.stringify({url, purl}));
+        fs.writeFileSync('sbSave.json', JSON.stringify({url, purl}));
       } catch (err) {
         reject(err)
       }
@@ -293,11 +300,12 @@ function parseIt() {
   .then(updateNextUrl)
   .then(()=>{
     console.log(new Date(), `processing next url: ${url}`)
-    if(purl!=books[bookName].endLink){
+    if(purl!=endLink){
       parseIt()
     }
   })
   .catch(function(err) {
+    process.stdout.write('\x07');
     console.log(err)
     log(err)
   });  
