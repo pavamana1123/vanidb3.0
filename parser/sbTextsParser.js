@@ -154,28 +154,21 @@ function parseHtml(data) {
         next=null
         prevLink=nextLink
         nextLink=null
-        break;
+        break
       case endLink:
         prev=null
         prevLink=null
-        break;
+        break
       case 'https://vanisource.org/wiki/SB_11.17.50':
         prev='SB 11.17.49'
         prevLink='/wiki/SB_11.17.49'
         next='SB 11.17.51'
         nextLink='/wiki/SB_11.17.51'
-        break;
-      case 'https://vanisource.org/wiki/SB_12.9.19':
-        prev='SB 12.9.17-18'
-        prevLink='/wiki/SB_12.9.17-18'
-        break;
-      case 'https://vanisource.org/wiki/SB_12.3.41':
-        prev='SB 12.3.39-40'
-        prevLink='/wiki/SB_12.3.39-40'
-        break;
-      case 'https://vanisource.org/wiki/SB_12.2.29':
-        prev='SB 12.2.27-28'
-        prevLink='/wiki/SB_12.2.27-28'
+        break
+      case 'https://vanisource.org/wiki/SB_11.22.25':
+        next='SB 11.22.26'
+        nextLink='/wiki/SB_11.22.26'
+        break
     }
 
     if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){

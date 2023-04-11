@@ -162,17 +162,21 @@ function parseHtml(data) {
         next=null
         prevLink=nextLink
         nextLink=null
-        break;
+        break
       case endLink:
         prev=null
         prevLink=null
-        break;
+        break
       case 'https://vanisource.org/wiki/SB_11.17.50':
         prev='SB 11.17.49'
         prevLink='/wiki/SB_11.17.49'
         next='SB 11.17.51'
         nextLink='/wiki/SB_11.17.51'
-        break;
+        break
+      case 'https://vanisource.org/wiki/SB_11.22.25':
+        next='SB 11.22.26'
+        nextLink='/wiki/SB_11.22.26'
+        break
     }
 
 
@@ -188,24 +192,28 @@ function parseHtml(data) {
     }
 
     if(next){
-      var thisText = getTexts(name)
-      var thisVerse = thisText[thisText.length-1]
+      if(!next.endsWith("Appendix")){
+        var thisText = getTexts(name)
+        var thisVerse = thisText[thisText.length-1]
 
-      var nextText = getTexts(next)
-      var nextVerse = nextText[0]
+        var nextText = getTexts(next)
+        var nextVerse = nextText[0]
 
-      if(nextVerse!="Summary"){
-        if(!isNaN(thisVerse) && !isNaN(nextVerse)){
-            if(parseInt(thisVerse)!=parseInt(nextVerse)-1){
+        if(nextVerse!="Summary"){
+          if(!isNaN(thisVerse) && !isNaN(nextVerse)){
+              if(parseInt(thisVerse)!=parseInt(nextVerse)-1){
+                faultMap[name]=next
+              }
+          }else if(thisVerse=="Summary"){
+            if(nextVerse!="1"){
               faultMap[name]=next
             }
-        }else if(thisVerse=="Summary"){
-          if(nextVerse!="1"){
+          }else{
             faultMap[name]=next
           }
-        }else{
-          faultMap[name]=next
         }
+      }else{
+        faultMap[next] = url
       }
     }
 
