@@ -177,15 +177,16 @@ function parseHtml(data) {
         next='SB 11.22.26'
         nextLink='/wiki/SB_11.22.26'
         break
+      case 'https://vanisource.org/wiki/SB_10.41.20-23':
+        prev='SB 10.41.19'
+        prevLink='/wiki/SB_10.41.19'
+        break        
     }
 
-
-    if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){
+    if(purl && nextLink && purl.endsWith("Summary") && (nextLink.endsWith(".1") || (texts.length && texts[0]=="1"))){
       next=purl.split("/")[purl.split("/").length-1].replaceAll("_Summary",".Summary")
       nextLink=purl.replace("https://vanisource.org","")
     }
-
-
 
     if(purl && nextLink && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
       faultMap[purl]=nextLink
@@ -193,24 +194,28 @@ function parseHtml(data) {
 
     if(next){
       if(!next.endsWith("Appendix")){
-        var thisText = getTexts(name)
-        var thisVerse = thisText[thisText.length-1]
+        try{
+          var thisText = getTexts(name)
+          var thisVerse = thisText[thisText.length-1]
 
-        var nextText = getTexts(next)
-        var nextVerse = nextText[0]
+          var nextText = getTexts(next)
+          var nextVerse = nextText[0]
 
-        if(nextVerse!="Summary"){
-          if(!isNaN(thisVerse) && !isNaN(nextVerse)){
-              if(parseInt(thisVerse)!=parseInt(nextVerse)-1){
+          if(nextVerse!="Summary"){
+            if(!isNaN(thisVerse) && !isNaN(nextVerse)){
+                if(parseInt(thisVerse)!=parseInt(nextVerse)-1){
+                  faultMap[name]=next
+                }
+            }else if(thisVerse=="Summary"){
+              if(nextVerse!="1"){
                 faultMap[name]=next
               }
-          }else if(thisVerse=="Summary"){
-            if(nextVerse!="1"){
+            }else{
               faultMap[name]=next
             }
-          }else{
-            faultMap[name]=next
           }
+        }catch{
+          faultMap[`parts:${name}`]=next
         }
       }else{
         faultMap[next] = url
@@ -224,7 +229,7 @@ function parseHtml(data) {
 
     const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName, isSummary}
     if(!isSummary && (verses.length!=texts.length)){
-      reject(`Mismatch len: ${parsedContent.name}`)
+      faultMap[`Mismatch len: ${name}`]=`${verses.length}/${texts.length}`
     }
     parsedData = parsedContent
     resolve(parsedContent)
