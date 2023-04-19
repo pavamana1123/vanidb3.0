@@ -1,4 +1,5 @@
 var HTMLParser = require('node-html-parser');
+var corrections = require("./corrections.js")
 const fs = require('fs');
 
 const https = require('https');
@@ -54,8 +55,6 @@ function getHtml(url) {
 
 function parseHtml(htmlData) {
 
-  // log(`<${save.data.url}> parsing this` )
-
   return new Promise(function(resolve, reject) {
     const root = HTMLParser.parse(htmlData)
 
@@ -106,7 +105,7 @@ function parseHtml(htmlData) {
       return []
       
     })()
-    const verses = isSummary?[""]:versesNode.map(n=>{return Buffer.from(n.textContent.trim()).toString('base64')})
+    const verses = isSummary?[""]:(corrections.verses[save.data.url] || versesNode.map(n=>{return n.textContent.trim()})).map(n=>{return Buffer.from(n).toString('base64')})
     group = verses.length>1
 
     const links = (()=>{
@@ -117,104 +116,16 @@ function parseHtml(htmlData) {
       return [x[1], x[0]]
     })()
 
-    var nextLink = links[0].getAttribute("href")
-    var prevLink = links[1].getAttribute("href")
+    var nextLink = (corrections.links[save.data.url] && corrections.links[save.data.url].nextLink) || links[0].getAttribute("href")
+    var prevLink = (corrections.links[save.data.url] && corrections.links[save.data.url].prevLink) || links[1].getAttribute("href")
 
-    // exception corrections
+    // fix edge cases
     switch(save.data.url){
       case startLink:
-        prevLink=nextLink
         nextLink=null
         break
       case endLink:
-        nextLink='/wiki/SB_1.1.2'
         prevLink=null
-        break
-      case 'https://vanisource.org/wiki/SB_12.9.19':
-        prevLink='/wiki/SB_12.9.17-18'
-        break 
-      case 'https://vanisource.org/wiki/SB_12.3.41':
-        prevLink='/wiki/SB_12.3.39-40'
-        break
-      case 'https://vanisource.org/wiki/SB_12.2.29':
-        prevLink='/wiki/SB_12.2.27-28'
-        break 
-      case 'https://vanisource.org/wiki/SB_12.2.21':
-        prevLink='/wiki/SB_12.2.19-20'
-        break   
-      case 'https://vanisource.org/wiki/SB_12.1.18':
-        prevLink='/wiki/SB_12.1.15-17'
-        break              
-      case 'https://vanisource.org/wiki/SB_11.22.25':
-        nextLink='/wiki/SB_11.22.26'
-        break
-      case 'https://vanisource.org/wiki/SB_11.17.50':
-        prevLink='/wiki/SB_11.17.49'
-        nextLink='/wiki/SB_11.17.51'
-        break
-      case 'https://vanisource.org/wiki/SB_10.80.23':
-        prevLink='/wiki/SB_10.80.20-22'
-        break 
-      case 'https://vanisource.org/wiki/SB_10.50.39':
-        prevLink='/wiki/SB_10.50.37-38'
-        break  
-      case 'https://vanisource.org/wiki/SB_10.41.20-23':
-        prevLink='/wiki/SB_10.41.19'
-        break  
-      case 'https://vanisource.org/wiki/SB_11.19.1':
-        prevLink='/wiki/SB_11.19_Summary'
-        break  
-      case 'https://vanisource.org/wiki/SB_11.8.3':
-        nextLink='/wiki/SB_11.8.4'
-        prevLink='/wiki/SB_11.8.2'
-        break  
-      case 'https://vanisource.org/wiki/SB_10.37.30':
-        nextLink='/wiki/SB_10.37.31'
-        break 
-      case 'https://vanisource.org/wiki/SB_10.37.29':
-        nextLink='/wiki/SB_10.37.30'
-        prevLink='/wiki/SB_10.37.28'
-        break  
-      case 'https://vanisource.org/wiki/SB_10.24.36':
-        prevLink='/wiki/SB_10.24.35'
-        break 
-      case 'https://vanisource.org/wiki/SB_10.10_Summary':
-        nextLink='/wiki/SB_10.10.1'
-        prevLink='/wiki/SB_10.9.23'
-        break 
-      case 'https://vanisource.org/wiki/SB_9.1.1':
-        prevLink='/wiki/SB_9.1_Summary'
-        break
-      case 'https://vanisource.org/wiki/SB_8.16.30':
-        prevLink='/wiki/SB_8.16.29'
-        break 
-      case 'https://vanisource.org/wiki/SB_8.5.41':
-        prevLink='/wiki/SB_8.5.40'
-        break 
-      case 'https://vanisource.org/wiki/SB_5.7_Summary':
-        prevLink='/wiki/SB_5.6.18'
-        break 
-      case 'https://vanisource.org/wiki/SB_4.16.27':
-        prevLink='/wiki/SB_4.16.26'
-        break 
-      case 'https://vanisource.org/wiki/SB_4.16.26':
-        prevLink='/wiki/SB_4.16.25'
-        break 
-      case 'https://vanisource.org/wiki/SB_4.15.26':
-        prevLink='/wiki/SB_4.15.25'
-        break 
-      case 'https://vanisource.org/wiki/SB_4.5.26':
-        prevLink='/wiki/SB_4.5.25'
-        break 
-      case 'https://vanisource.org/wiki/SB_1.17.15':
-        prevLink='/wiki/SB_1.17.14'
-        break 
-      case 'https://vanisource.org/wiki/SB_1.8.25':
-        prevLink='/wiki/SB_1.8.24'
-        break
-      case 'https://vanisource.org/wiki/SB_1.1.2':
-        nextLink='/wiki/SB_1.1.3'
-        prevLink='/wiki/SB_1.1.1'
         break
     }
 
@@ -273,7 +184,7 @@ function parseHtml(htmlData) {
     // symmetry test
     if(save.pdata && save.data.nextLink!=url2link(save.pdata.url)){
       log(`broken symmetry: ${save.data.nextLink} and ${save.pdata.url}`)
-      save.sym[save.data.url] = save.pdata.prevLink
+      save.sym[save.data.nextLink] = save.pdata.url
     }    
 
     // mismatch
