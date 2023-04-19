@@ -1,0 +1,41 @@
+{
+  "data": {
+    "url": "https://vanisource.org/wiki/SB_1.1.2",
+    "name": "SB 1.1.2",
+    "nextLink": "/wiki/SB_1.1.3",
+    "prevLink": "/wiki/SB_1.1.1"
+  },
+  "sym": {
+    "https://vanisource.org/wiki/SB_11.23.60": "/wiki/SB_11.23.60",
+    "https://vanisource.org/wiki/SB_11.22.24": "/wiki/SB_11.22.24",
+    "https://vanisource.org/wiki/SB_11.8.3": "/wiki/SB_11.8.3",
+    "https://vanisource.org/wiki/SB_9.18.5": "/wiki/SB_9.18.5",
+    "https://vanisource.org/wiki/SB_6.8_Summary": "/wiki/SB_6.8_Summary",
+    "https://vanisource.org/wiki/SB_6.4_Summary": "/wiki/SB_6.4_Summary",
+    "https://vanisource.org/wiki/SB_5.9_Summary": "/wiki/SB_5.9_Summary",
+    "https://vanisource.org/wiki/SB_4.29.85": "/wiki/SB_4.29.85",
+    "https://vanisource.org/wiki/SB_3.29.10": "/wiki/SB_3.29.10"
+  },
+  "mismatch": {
+    "https://vanisource.org/wiki/SB_11.11.12-13": "1/2: https://vanisource.org/wiki/SB_11.11.12-13",
+    "https://vanisource.org/wiki/SB_10.62.2": "3/1: https://vanisource.org/wiki/SB_10.62.2",
+    "https://vanisource.org/wiki/SB_10.30.30": "2/1: https://vanisource.org/wiki/SB_10.30.30",
+    "https://vanisource.org/wiki/SB_10.15.10-12": "4/3: https://vanisource.org/wiki/SB_10.15.10-12",
+    "https://vanisource.org/wiki/SB_7.13.16-17": "1/2: https://vanisource.org/wiki/SB_7.13.16-17",
+    "https://vanisource.org/wiki/SB_5.21.8-9": "1/2: https://vanisource.org/wiki/SB_5.21.8-9",
+    "https://vanisource.org/wiki/SB_5.20.3-4": "1/2: https://vanisource.org/wiki/SB_5.20.3-4",
+    "https://vanisource.org/wiki/SB_5.19.29-30": "1/2: https://vanisource.org/wiki/SB_5.19.29-30",
+    "https://vanisource.org/wiki/SB_5.19.17-18": "1/2: https://vanisource.org/wiki/SB_5.19.17-18",
+    "https://vanisource.org/wiki/SB_5.16.13-14": "1/2: https://vanisource.org/wiki/SB_5.16.13-14",
+    "https://vanisource.org/wiki/SB_5.15.14-15": "1/2: https://vanisource.org/wiki/SB_5.15.14-15",
+    "https://vanisource.org/wiki/SB_5.9.9-10": "1/2: https://vanisource.org/wiki/SB_5.9.9-10",
+    "https://vanisource.org/wiki/SB_5.9.1-2": "1/2: https://vanisource.org/wiki/SB_5.9.1-2",
+    "https://vanisource.org/wiki/SB_5.3.4-5": "1/2: https://vanisource.org/wiki/SB_5.3.4-5"
+  },
+  "pdata": {
+    "url": "https://vanisource.org/wiki/SB_1.1.3",
+    "name": "SB 1.1.3",
+    "nextLink": "/wiki/SB_1.1.4",
+    "prevLink": "/wiki/SB_1.1.2"
+  }
+}
