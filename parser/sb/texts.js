@@ -1,10 +1,12 @@
 var HTMLParser = require('node-html-parser');
 const fs = require('fs');
+var corrections = require("./tests/corrections.js")
+
 
 const https = require('https');
 
-var cred = require("./cred.js")
-const DB = require("./db.js")
+var cred = require("../cred.js")
+const DB = require("../db.js")
 
 cred.mysql.connectionLimit = 100
 cred.mysql.multipleStatements = true
@@ -15,22 +17,40 @@ var db = new DB(mysql.createPool(cred.mysql))
 const startLink = "https://vanisource.org/wiki/SB_12.13.23"
 const endLink =  "https://vanisource.org/wiki/SB_1.1.1"
 
-var saveData = fs.readFileSync('sbSave.json', 'utf8').trim()
-var url, purl = null
+var nurl
 
 try{
-  var saveParseData = JSON.parse(saveData)
-  url = saveParseData.url
-  purl = saveParseData.purl
-}catch{
-  url = startLink
+  var [url, purl] = JSON.parse(fs.readFileSync('save.json', 'utf8').trim())
+}catch(err){
+  var [url, purl] = [startLink, endLink]
 }
 
 var overwrite = true
 
-function getHtml(url) {
+function getTexts(t){
+  var p = t.split(".")
+  return p[p.length-1].split("-")
+}
+
+function url2link(u){
+  return u.replace("https://vanisource.org","")
+}
+
+function url2name(u){
+  return u.replace("https://vanisource.org/wiki/","").replace("SB_","SB ").replaceAll("_",".")
+}
+
+function link2name(l){
+  return !!l?l.replace("/wiki/").replace("SB_","SB ").replaceAll("_","."):null
+}
+
+function link2url(l){
+  return `https://vanisource.org${l}`
+}
+
+function getHtml(u) {
     return new Promise(function(resolve, reject) {
-        https.get(url, (res) => {
+        https.get(u, (res) => {
             let data = ''
             res.on('data', (chunk) => {
                 data += chunk
@@ -44,22 +64,20 @@ function getHtml(url) {
     });
 }
 
-function parseHtml(data) {
-
+function parseHtml(htmlContent) {
   return new Promise(function(resolve, reject) {
-    const root = HTMLParser.parse(data)
+    const root = HTMLParser.parse(htmlContent)
 
-    const name = root.querySelector("#firstHeading").textContent.trim()
+    var name = url2name(url)
     const book = name.split(" ")[0]
     const parts = name.split(" ")[1].split(".")
     var canto = null
     var chapter = null
     var texts = []
     var text = ""
-    var group = false
+    var isGroup = false
     var isSummary = false
     if(name.endsWith("Summary")){
-      name = name.replace(" Summary",".Summary")
       canto = parts[0]
       chapter = parts[1].split(" ")[0]
       texts = ["Summary"]
@@ -80,7 +98,7 @@ function parseHtml(data) {
         if(parts.length==1){
           return parts
         }
-        group = true
+        isGroup = true
         var texts = []
         for (var i = parseInt(parts[0].replaceAll(alpha,"")); i <= parseInt(parts[1].replaceAll(alpha,"")); i++) {
             texts.push(i+alpha)
@@ -97,9 +115,9 @@ function parseHtml(data) {
       return []
       
     })()
-    const verses = isSummary?[""]:versesNode.map(n=>{return Buffer.from(n.textContent.trim()).toString('base64')})
-    const proseFlags = versesNode.map((n)=>{return n.textContent.trim().split("\n").length<4})
-    group = verses.length>1
+
+    const verses = isSummary?[""]:(corrections.verses[url] || versesNode.map(n=>{return n.textContent.trim()})).map(n=>{return Buffer.from(n).toString('base64')})
+    isGroup = verses.length>1
 
     const synonyms = (()=>{
       var x = root.querySelector(".synonyms")
@@ -138,181 +156,140 @@ function parseHtml(data) {
     })()
 
     const links = (()=>{
-      var x = root.querySelector(".mw-parser-output").getElementsByTagName("a")
-      return [x[x.length-1], x[x.length-3]]
+      var x = root.querySelector(".mw-parser-output").getElementsByTagName("a").filter(a=>{
+        return a.childNodes && a.childNodes[0] && a.childNodes[0].rawTagName=="img"
+      })
+
+      return [x[1], x[0]]
     })()
 
-    var next = links[0].getAttribute("title")
-    var prev = links[1].getAttribute("title")
+    var nextLink = (corrections.links[url] && corrections.links[url].nextLink) || links[0].getAttribute("href")
+    var prevLink = (corrections.links[url] && corrections.links[url].prevLink) || links[1].getAttribute("href")
 
-    var nextLink = links[0].getAttribute("href")
-    var prevLink = links[1].getAttribute("href")
-
+    // fix edge cases
     switch(url){
       case startLink:
-        prev=next
-        next=null
-        prevLink=nextLink
         nextLink=null
         break
       case endLink:
-        prev=null
         prevLink=null
         break
-      case 'https://vanisource.org/wiki/SB_11.17.50':
-        prev='SB 11.17.49'
-        prevLink='/wiki/SB_11.17.49'
-        next='SB 11.17.51'
-        nextLink='/wiki/SB_11.17.51'
-        break
-      case 'https://vanisource.org/wiki/SB_11.22.25':
-        next='SB 11.22.26'
-        nextLink='/wiki/SB_11.22.26'
-        break
     }
 
-    if(purl && nextLink && purl.endsWith("Summary") && nextLink.endsWith(".1")){
-      next=purl.split("/")[purl.split("/").length-1].replaceAll("_Summary",".Summary")
-      nextLink=purl.replace("https://vanisource.org","")
+    // fix summary non-symmetry 
+    if(save.pdata && save.pdata.url.endsWith("Summary")){
+      nextLink=url2link(save.pdata.url)
     }
 
-    if(purl && nextLink && (!nextLink.trim().endsWith(".1") && !purl.trim().endsWith("_Summary")) && `https://vanisource.org${nextLink}`!==purl){
-      reject(`link disconnected at ${url} ${nextLink} ${purl}`)
-    }
+    nurl = link2url(prevLink)
 
-    const chapterName = (()=>{
-      var x = root.querySelector(".mw-parser-output").getElementsByTagName("b")[0].getElementsByTagName("a")
-      return x[x.length-1].textContent.split(":")[1].trim()
-    })()
-
-    const parsedContent =  {name, book, canto, chapter, texts, verses, proseFlags, group, synonyms, translation ,purport, next, prev, nextLink, prevLink, chapterName, isSummary}
-    if(!isSummary && (verses.length!=texts.length)){
-      reject(`Mismatch len: ${parsedContent.name}`)
-    }
-    parsedData = parsedContent
-    resolve(parsedContent)
+    resolve(
+      {
+        name,
+        book,
+        canto,
+        chapter,
+        texts,
+        verses,
+        synonyms,
+        translation,
+        purport,
+        nextLink,
+        prevLink,
+        isGroup,
+        isSummary
+      }
+    )
   });
 }
 
-function prepareQuery(parsedContent){
-  log("parsed html, preparing query")
-  return new Promise(function(resolve, reject) {
-    resolve(parsedContent.verses.map((v, i)=>{
-      return `INSERT ignore INTO texts
-      (
-      \`name\`,
-      \`book\`,
-      \`canto\`,
-      \`chapter\`,
-      \`text\`,
-      \`verse\`,
-      \`synonyms\`,
-      \`translation\`,
-      \`purport\`,
-      \`next\`,
-      \`prev\`,
-      \`nextLink\`,
-      \`prevLink\`,
-      \`isProse\`,
-      \`isGroup\`,
-      \`ord\`,
-      \`isSummary\`
-      )
-      VALUES
-      (
-      "${parsedContent.name}",
-      "${parsedContent.book}",
-      "${parsedContent.canto}",
-      "${parsedContent.chapter}",
-      "${parsedContent.texts[i]}",
-      "${v}",
-      "${parsedContent.synonyms}",
-      "${parsedContent.translation}",
-      "${parsedContent.purport}",
-      "${parsedContent.next}",
-      "${parsedContent.prev}",
-      "${parsedContent.nextLink}",
-      "${parsedContent.prevLink}",
-      ${!!parsedContent.proseFlags[i]},
-      ${!!parsedContent.group},
-      ${Date.now()},
-      ${!!parsedContent.isSummary}
-      )
-      
-      ${overwrite?`
-      ON DUPLICATE KEY UPDATE
-      name="${parsedContent.name}",
-      book="${parsedContent.book}",
-      canto="${parsedContent.canto}",
-      chapter="${parsedContent.chapter}",
-      text="${parsedContent.texts[i]}",
-      verse="${v}",
-      synonyms="${parsedContent.synonyms}",
-      translation="${parsedContent.translation}",
-      purport="${parsedContent.purport}",
-      next="${parsedContent.next}",
-      prev="${parsedContent.prev}",
-      nextLink="${parsedContent.nextLink}",
-      prevLink="${parsedContent.prevLink}",
-      isProse=${!!parsedContent.proseFlags[i]},
-      isGroup=${!!parsedContent.group},
-      ord=${Date.now()},
-      isSummary=${!!parsedContent.isSummary}
-      `:""}
-      ;
-      `
-    }).join(""))
-  })
-}
-
-function updateNextUrl(res, err){
-  log("save to db")
-  return new Promise(function(resolve, reject) {
-    if(err){
-      reject(err)
-    }else{
-      try {
-        fs.writeFileSync('sbSave.json', JSON.stringify({url, purl}, null, 2));
-      } catch (err) {
-        reject(err)
-      }
-      purl = url
-      url = `https://vanisource.org${parsedData.prevLink}`
-      resolve()
-    }
-  })
-}
-
-function saveToDatabase(query){
-  return db.execQuery(query)
+function save(parsedContent){
+  return db.execQuery(parsedContent.verses.map((v, i)=>{
+    return `INSERT ignore INTO texts
+    (
+    \`name\`,
+    \`book\`,
+    \`canto\`,
+    \`chapter\`,
+    \`text\`,
+    \`verse\`,
+    \`synonyms\`,
+    \`translation\`,
+    \`purport\`,
+    \`next\`,
+    \`prev\`,
+    \`isGroup\`,
+    \`ord\`,
+    \`isSummary\`
+    )
+    VALUES
+    (
+    "${parsedContent.name}",
+    "${parsedContent.book}",
+    "${parsedContent.canto}",
+    "${parsedContent.chapter}",
+    "${parsedContent.texts[i]}",
+    "${v}",
+    "${parsedContent.synonyms}",
+    "${parsedContent.translation}",
+    "${parsedContent.purport}",
+    "${link2name(parsedContent.nextLink)}",
+    "${link2name(parsedContent.prevLink)}",
+    ${!!parsedContent.isGroup},
+    ${Date.now()},
+    ${!!parsedContent.isSummary}
+    )
+    
+    ${overwrite?`
+    ON DUPLICATE KEY UPDATE
+    name="${parsedContent.name}",
+    book="${parsedContent.book}",
+    canto="${parsedContent.canto}",
+    chapter="${parsedContent.chapter}",
+    text="${parsedContent.texts[i]}",
+    verse="${v}",
+    synonyms="${parsedContent.synonyms}",
+    translation="${parsedContent.translation}",
+    purport="${parsedContent.purport}",
+    next="${parsedContent.next}",
+    prev="${parsedContent.prev}",
+    isGroup=${!!parsedContent.isGroup},
+    ord=${Date.now()},
+    isSummary=${!!parsedContent.isSummary}
+    `:""}
+    ;
+    `
+  }).join(""))
 }
 
 function log(l){
-  console.log(`  ${parsedData.name}> ${l}`)
+  console.log(`${new Date()} <${url}> ${l}`)
 }
 
-var parsedData
-
-function parseIt() {
-  getHtml(url)
+function vani(u) {
+  getHtml(u)
   .then(parseHtml)
-  .then(prepareQuery)
-  .then(saveToDatabase)
-  .then(updateNextUrl)
-  .then(()=>{
-    console.log(new Date(), `processing next url: ${url}`)
+  .then(save)
+  .then((res, err)=>{
+    if(err){
+      throw err
+    }
+    log('saved')
+    fs.writeFileSync('save.json', JSON.stringify([url, purl], null, 2));
+    purl = url
+    url = nurl
     if(purl!=endLink){
-      parseIt()
+      vani(url)
     }
   })
-  .catch(function(err) {
+  .catch(err => {
     process.stdout.write('\x07');
     console.log(err)
     log(err)
   });  
 }
 
-parseIt()
+vani(url)
 
 
 

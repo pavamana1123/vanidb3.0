@@ -122,8 +122,7 @@ var corrections = {
           "prakṛti-stho 'py asaṁsakto\nyathā khaṁ savitānilaḥ\nvaiśāradyekṣayāsaṅga-\nśitayā chinna-saṁśayaḥ","pratibuddha iva svapnān\nnānātvād vinivartate"
         ],
         "https://vanisource.org/wiki/SB_10.62.2": [
-          "śrī-śuka uvāca\nbāṇaḥ putra-śata-jyeṣṭho\nbaler āsīn mahātmanaḥ\nyena vāmana-rūpāya\nharaye 'dāyi medinī",
-          "tasyaurasaḥ suto bānaḥ\nśiva-bhakti-rataḥ sadā\nmānyo vadānyo dhīmāṁś ca\nsatya-sandho dṛḍha-vrataḥ\nśoṇitākhye pure ramye\nsa rājyam akarot purā\ntasya śambhoḥ prasādena\nkiṅkarā iva te 'marāḥ\nsahasra-bāhur vādyena\ntāṇdave 'toṣayan mṛḍam"
+          "śrī-śuka uvāca\nbāṇaḥ putra-śata-jyeṣṭho\nbaler āsīn mahātmanaḥ\nyena vāmana-rūpāya\nharaye 'dāyi medinī\ntasyaurasaḥ suto bānaḥ\nśiva-bhakti-rataḥ sadā\nmānyo vadānyo dhīmāṁś ca\nsatya-sandho dṛḍha-vrataḥ\nśoṇitākhye pure ramye\nsa rājyam akarot purā\ntasya śambhoḥ prasādena\nkiṅkarā iva te 'marāḥ\nsahasra-bāhur vādyena\ntāṇdave 'toṣayan mṛḍam"
         ],
         "https://vanisource.org/wiki/SB_10.30.30": [
           "tasyā amūni naḥ kṣobhaṁ\nkurvanty uccaiḥ padāni yat\nyaikāpahṛtya gopīnām\nraho bhunkte 'cyutādharam\nna lakṣyante padāny atra\ntasyā nūnaṁ tṛṇāṅkuraiḥ\nkhidyat-sujātāṅghri-talām\nunninye preyasīṁ priyaḥ"
