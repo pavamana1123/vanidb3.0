@@ -41,7 +41,7 @@ function url2name(u){
 }
 
 function link2name(l){
-  return !!l?l.replace("/wiki/").replace("SB_","SB ").replaceAll("_","."):null
+  return !!l?l.replace("/wiki/","").replace("SB_","SB ").replaceAll("_","."):null
 }
 
 function link2url(l){
@@ -251,8 +251,8 @@ function save(parsedContent){
     synonyms="${parsedContent.synonyms}",
     translation="${parsedContent.translation}",
     purport="${parsedContent.purport}",
-    next="${parsedContent.next}",
-    prev="${parsedContent.prev}",
+    next="${link2name(parsedContent.nextLink)}",
+    prev="${link2name(parsedContent.prevLink)}",
     isGroup=${!!parsedContent.isGroup},
     ord=${Date.now()},
     isSummary=${!!parsedContent.isSummary}

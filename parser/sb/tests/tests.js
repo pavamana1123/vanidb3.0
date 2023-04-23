@@ -34,7 +34,7 @@ function url2name(u){
 }
 
 function link2name(l){
-  return l.replace("/wiki/").replace("SB_","SB ").replaceAll("_",".")
+  return l.replace("/wiki/","").replace("SB_","SB ").replaceAll("_",".")
 }
 
 function getHtml(url) {

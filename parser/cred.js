@@ -3,7 +3,7 @@ var cred = {
         host: "localhost",
         user: "root",
         password: "root",
-        database: "vanidb",
+        database: "iskconmy_vanidb",
     }
 }
 
