@@ -19,22 +19,21 @@ function getHtml(url) {
 }
 
 async function run() {
-    const text = new Text()
-    try {
-        const devLink = `https://vedabase.io/en/library/${text.name.toLowerCase().replaceAll('.', '/').replaceAll(' ', '/')}`
-        
-        getHtml(devLink).then(html => {
-            console.log(devLink, html)
-            const root = HTMLParser.parse(html)
-            var raw =  root.querySelectorAll('*')
-            console.log(raw)
-        })
+  const text = new Text()
+  try {
+    const devLink = `https://vedabase.io/en/library/${text.name.toLowerCase().replaceAll('.', '/').replaceAll(' ', '/')}/`
 
-    } catch (err) {
-        console.error(err.message)
-    } finally {
-        text.close()
-    }
+    getHtml(devLink).then(html => {
+      console.log(HTMLParser.parse(html)
+        .querySelectorAll('.em\\:text-lg')[0]
+        .textContent)
+    })
+
+  } catch (err) {
+    console.error(err.message)
+  } finally {
+    text.close()
+  }
 }
 
 run()
