@@ -23,8 +23,8 @@ const query = `
 FROM
     texts
 WHERE
-    canto = 1
-ORDER BY ord DESC`
+    ord IS NOT NULL AND isSummary = 0
+ORDER BY ord`
 
 pool.query(query, null, (err, results) => {
     if (!err) {
