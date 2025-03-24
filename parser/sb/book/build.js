@@ -107,7 +107,13 @@ const addTx = text => {
 
 data.slice(0, 100000).forEach(text => {
 
-    if (text.chapter == '1' && text.text == '1') {
+    if (text.canto == '1' && text.chapter == '1' && text.text == '1') {
+        newCantoPage(text)
+        newChapter(text)
+    }
+
+    if (text.canto != '1' && text.chapter == '1' && text.text == '1') {
+        pageNumber++
         newCantoPage(text)
         newChapter(text)
     }
