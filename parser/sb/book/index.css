@@ -45,7 +45,7 @@ body {
     text-transform: uppercase;
     font-size: 10mm;
     white-space: break-spaces;
-    width: 180mm;
+    width: 170mm;
 
     position: absolute;
     top: 50%;
@@ -72,7 +72,6 @@ body {
     box-sizing: border-box;
     padding: 15mm 6mm 10mm 6mm;
 
-    background: linear-gradient(#eee, #fff);
 }
 
 .page-title {

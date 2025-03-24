@@ -1,10 +1,10 @@
-var pageNumber = 1
+var pageNumber = -3
 
 const addPageBreak = nonext => {
     var pageBreak = document.createElement('div')
     pageBreak.className = 'page-break'
     document.body.appendChild(pageBreak)
-    pageNumber++
+    if (!nonext) { pageNumber++ }
 }
 
 const addEmptyPage = () => {
@@ -50,8 +50,6 @@ const newChapter = text => {
     addPageBreak()
     addEmptyPage()
     newPage(text)
-    pageNumber--
-    console.log(pageNumber)
 }
 
 const newPage = text => {
@@ -60,7 +58,7 @@ const newPage = text => {
     page.id = `page-${pageNumber}`
     document.body.appendChild(page)
 
-    addPageBreak()
+    addPageBreak(true)
 
     var topBorder = document.createElement('div')
     topBorder.innerHTML = `
@@ -107,13 +105,15 @@ const addTx = text => {
 }
 
 
-data.forEach(text => {
+data.slice(0, 100000).forEach(text => {
 
     if (text.chapter == '1' && text.text == '1') {
         newCantoPage(text)
+        newChapter(text)
     }
 
-    if (text.text == '1') {
+    if (text.chapter != '1' && text.text == '1') {
+        pageNumber++
         newChapter(text)
     }
 
@@ -121,6 +121,7 @@ data.forEach(text => {
     var page = document.getElementById(`page-${pageNumber}`)
     if (page.scrollWidth > page.clientWidth) {
         devanagari.remove()
+        pageNumber++
         newPage(text)
         addDevanagari(text)
     }
@@ -129,6 +130,7 @@ data.forEach(text => {
     var page = document.getElementById(`page-${pageNumber}`)
     if (page.scrollWidth > page.clientWidth) {
         tx.remove()
+        pageNumber++
         newPage(text)
         addTx(text)
     }
