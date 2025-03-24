@@ -1,12 +1,63 @@
+:root {
+    --dev-fs: 4.5mm;
+    --tx-fs: 4.7mm;
+    --verse-number-fs: 4.5mm;
+    --page-title-fs: 4.3mm;
+}
+
 body {
     margin: 0;
 }
 
-.page {
+.canto-page {
+    position: relative;
+
     width: 210mm;
     height: 297mm;
     box-sizing: border-box;
-    border: .1mm #555 solid;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    box-sizing: border-box;
+    background: linear-gradient(#eee);
+
+    padding: 10mm;
+}
+
+.canto-page-cont {
+    border: .1mm solid #aaa;
+    width: 190mm;
+    box-sizing: border-box;
+    height: 280mm;
+    border-radius: 2mm;
+    overflow: hidden;
+    position: relative;
+}
+
+.canto-page-title {
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 10mm;
+    white-space: break-spaces;
+    width: 180mm;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.page, .empty-page {
+    position: relative;
+
+    width: 210mm;
+    height: 297mm;
 
     display: flex;
     flex-direction: column;
@@ -19,7 +70,29 @@ body {
     -ms-overflow-style: none;
 
     box-sizing: border-box;
-    padding: 4mm;
+    padding: 15mm 6mm 10mm 6mm;
+
+    background: linear-gradient(#eee, #fff);
+}
+
+.page-title {
+    position: absolute;
+    top: 4.5mm;
+    display: flex;
+    width: 198mm;
+    justify-content: center;
+    font-weight: bold;
+
+    font-size: var(--page-title-fs);
+}
+
+.page-num {
+    position: absolute;
+    top: 288mm;
+    display: flex;
+    width: 198mm;
+    justify-content: center;
+    font-weight: bold;
 }
 
 .page::-webkit-scrollbar {
@@ -30,17 +103,61 @@ body {
     page-break-after: always;
 }
 
-.text-title {
-    width: 50%;
+.text-devanagari {
     text-align: center;
-    font-size: 5mm;
-    font-weight: bold;
+    width: 98mm;
+}
 
-    margin-bottom: 1mm;
+.text-title {
+    width: 100%;
+    text-align: center;
+    font-size: var(--verse-number-fs);
+    font-weight: bold;
+    margin-bottom: 0.1mm;
 }
 
 .text-line {
-    width: 50%;
+    font-size: var(--dev-fs);
+    white-space: break-spaces;
+}
+
+.text-tx {
+    width: 100%;
     text-align: center;
-    font-size: 5mm;
+    white-space: break-spaces;
+    width: 98mm;
+    text-align: center;
+    font-size: var(--tx-fs);
+    white-space: break-spaces;
+    margin-bottom: 4mm;
+}
+
+
+.sep {
+    height: 2mm;
+}
+
+.page-top-border {
+    position: absolute;
+    top: 11mm;
+    width: 198mm;
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.page-top-border-1,
+.page-top-border-2 {
+    background: black;
+    width: 100%;
+}
+
+.page-top-border-1 {
+    height: .5mm;
+    margin-bottom: .2mm;
+}
+
+.page-top-border-2 {
+    height: 1mm;
 }

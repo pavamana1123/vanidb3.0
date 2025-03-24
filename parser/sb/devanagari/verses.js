@@ -45,7 +45,7 @@ const data = [
     "chapter": "1",
     "text": "6",
     "verse": "ṛṣaya ūcuḥ\ntvayā khalu purāṇāni\nsetihāsāni cānagha\nākhyātāny apy adhītāni\ndharma-śāstrāṇi yāny uta",
-    "devanagari": "त्वया खलु पुराणानि सेतिहासानि चानघ ।\nआख्यातान्यप्यधीतानि धर्मशास्त्राणि यान्युत ।।"
+    "devanagari": "ऋषयः उचुः\nत्वया खलु पुराणानि सेतिहासानि चानघ ।\nआख्यातान्यप्यधीतानि धर्मशास्त्राणि यान्युत ।।"
   },
   {
     "book": "SB",

@@ -12,7 +12,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 })
 
-const query = `
+const verseQuery = `
     SELECT 
     book,
     canto,
@@ -26,7 +26,7 @@ WHERE
     ord IS NOT NULL AND isSummary = 0
 ORDER BY ord`
 
-pool.query(query, null, (err, results) => {
+pool.query(verseQuery, null, (err, results) => {
     if (!err) {
         fs.writeFile('verses.js', `const data = ${JSON.stringify(results, null, 2)}`, 'utf8', (err) => {
             if (err) {
@@ -34,7 +34,30 @@ pool.query(query, null, (err, results) => {
                 return
             }
             console.log('File written successfully')
-            pool.end()
+            // pool.end()
+        })
+    } else {
+        console.log(err)
+    }
+})
+
+const titlesQuery = `
+    SELECT 
+    canto,
+    chapter,
+    title
+FROM
+    titles`.trim()
+
+pool.query(titlesQuery, null, (err, results) => {
+    if (!err) {
+        fs.writeFile('titles.js', `const data = ${JSON.stringify(results, null, 2)}`, 'utf8', (err) => {
+            if (err) {
+                console.error('Error writing file:', err)
+                return
+            }
+            console.log('File written successfully')
+            // pool.end()
         })
     } else {
         console.log(err)
